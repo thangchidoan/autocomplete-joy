@@ -8,6 +8,7 @@ import {
     Sheet,
 } from "@mui/joy";
 import { UserOption } from "./components/UserOption";
+import { UserOptionSkeleton } from "./components/UserOptionSkeleton";
 import { fetchUsers } from "./api/mockApi";
 
 const ITEMS_PER_PAGE = 20;
@@ -150,13 +151,18 @@ function App() {
                     renderOption={(props, user) => {
                         const isLastUser = user.id === users[users.length - 1]?.id;
                         return (
-                            <AutocompleteOption
-                                {...props}
-                                key={user.id}
-                                ref={isLastUser ? sentinelRef : undefined}
-                            >
-                                <UserOption user={user} />
-                            </AutocompleteOption>
+                            <>
+                                <AutocompleteOption
+                                    {...props}
+                                    key={user.id}
+                                    ref={isLastUser ? sentinelRef : undefined}
+                                >
+                                    <UserOption user={user} />
+                                </AutocompleteOption>
+                                {isLastUser && isFetchingNextPage && (
+                                    <UserOptionSkeleton />
+                                )}
+                            </>
                         );
                     }}
                     placeholder="Search for a user..."

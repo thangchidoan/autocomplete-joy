@@ -33,8 +33,8 @@ function delay(ms: number): Promise<void> {
  * Simulates a real API call with delay
  */
 export async function fetchUsers(page: number, limit: number = 20): Promise<FetchUsersResponse> {
-  // Simulate network delay (500-1000ms)
-  await delay(500 + Math.random() * 500);
+  // Simulate network delay (1500-2500ms)
+  await delay(1500 + Math.random() * 1000);
 
   // Generate mock users for this page
   const startIndex = (page - 1) * limit;
