@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, useLayoutEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
     Autocomplete,
@@ -16,6 +16,7 @@ function App() {
     const [open, setOpen] = useState(false);
     const listboxRef = useRef<HTMLUListElement>(null);
     const sentinelRef = useRef<HTMLLIElement>(null);
+    const scrollTopRef = useRef(0);
 
     // Infinite query using TanStack Query
     const {
@@ -29,17 +30,36 @@ function App() {
         queryKey: ["users"],
         queryFn: ({ pageParam = 1 }) => fetchUsers(pageParam, ITEMS_PER_PAGE),
         getNextPageParam: (lastPage) => {
-            // Return the next page number if there are more pages, otherwise undefined
             return lastPage.hasMore ? lastPage.page + 1 : undefined;
         },
         initialPageParam: 1,
-        enabled: open, // Only fetch when dropdown is open
+        enabled: open,
     });
 
     // Flatten all pages into a single array of users
     const users = useMemo(() => {
         return data?.pages.flatMap((page) => page.data) ?? [];
     }, [data]);
+
+    // Save scroll position continuously
+    useEffect(() => {
+        const listbox = listboxRef.current;
+        if (!listbox) return;
+
+        const handleScroll = () => {
+            scrollTopRef.current = listbox.scrollTop;
+        };
+        listbox.addEventListener("scroll", handleScroll);
+        return () => listbox.removeEventListener("scroll", handleScroll);
+    }, [open, users.length]);
+
+    // Restore scroll position after new options are rendered
+    useLayoutEffect(() => {
+        const listbox = listboxRef.current;
+        if (listbox && scrollTopRef.current > 0) {
+            listbox.scrollTop = scrollTopRef.current;
+        }
+    }, [users.length]);
 
     // Intersection Observer to detect when user scrolls near bottom
     useEffect(() => {
