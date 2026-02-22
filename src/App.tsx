@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect, forwardRef } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import {
     Autocomplete,
@@ -72,24 +72,6 @@ function App() {
         };
     }, [hasNextPage, isFetchingNextPage, fetchNextPage, open, users.length]);
 
-    const ListboxComponent = useMemo(() => {
-        return forwardRef<HTMLUListElement, React.HTMLAttributes<HTMLUListElement>>(
-            function Listbox(props, ref) {
-                const { children, ...other } = props;
-                return (
-                    <ul {...other} ref={(node) => {
-                        listboxRef.current = node;
-                        if (typeof ref === 'function') ref(node);
-                        else if (ref) ref.current = node;
-                    }}>
-                        {children}
-                        <li ref={sentinelRef} aria-hidden style={{ height: 1 }} />
-                    </ul>
-                );
-            }
-        );
-    }, []);
-
     return (
         <Sheet
             sx={{
@@ -131,9 +113,9 @@ function App() {
                     isOptionEqualToValue={(option, value) =>
                         option?.id === value?.id
                     }
-                    slots={{ listbox: ListboxComponent }}
                     slotProps={{
                         listbox: {
+                            ref: listboxRef,
                             sx: {
                                 maxHeight: 300,
                                 overflowAnchor: "none",
@@ -145,11 +127,18 @@ function App() {
                             },
                         },
                     }}
-                    renderOption={(props, user) => (
-                        <AutocompleteOption {...props} key={user.id}>
-                            <UserOption user={user} />
-                        </AutocompleteOption>
-                    )}
+                    renderOption={(props, user) => {
+                        const isLastUser = user.id === users[users.length - 1]?.id;
+                        return (
+                            <AutocompleteOption
+                                {...props}
+                                key={user.id}
+                                ref={isLastUser ? sentinelRef : undefined}
+                            >
+                                <UserOption user={user} />
+                            </AutocompleteOption>
+                        );
+                    }}
                     placeholder="Search for a user..."
                 />
 
